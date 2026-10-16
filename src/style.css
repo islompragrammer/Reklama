@@ -1,0 +1,16 @@
+:root {
+  --teal: #1d6b5e; --teal-deep: #14524a; --teal-soft: #2a8070;
+  --sun: #f7b648; --sun-deep: #e9a02c;
+  --paper: #ffffff; --ink: #123c35; --muted: #5d7a74; --line: #d9e6e2;
+  --err: #c8452f;
+  --font: 'Montserrat Variable', 'Montserrat', system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+* { box-sizing: border-box; margin: 0; padding: 0 }
+html, body { min-height: 100% }
+body {
+  font-family: var(--font);
+  background: var(--teal); color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important } }
