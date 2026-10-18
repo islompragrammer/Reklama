@@ -1,6 +1,7 @@
 <script setup>
 import { ref, reactive, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { sendLead } from '../api'
+import { TG_CHANNEL } from '../config'
 
 const courses = [
   {
@@ -118,6 +119,40 @@ onBeforeUnmount(() => {
   window.removeEventListener('online', flush)
 })
 
+// Muvaffaqiyat oynasi qisqa ko'rinadi, so'ng Telegram kanal ochiladi.
+// tg:// — telefondagi Telegram ilovasi (akkaunt ochiq) to'g'ridan-to'g'ri kanalda ochiladi.
+// Ilova o'rnatilmagan bo'lsa (sahifa ochiq qolsa) — oddiy t.me sahifasi.
+// Brauzerlar ilovani faqat bosishdan keyin ~5 soniya ichida ochishga ruxsat beradi, shuning uchun kutish qisqa.
+const REDIRECT_DELAY = 800
+const CHANNEL_USER = TG_CHANNEL.match(/t\.me\/([A-Za-z0-9_]+)/)?.[1]
+function go(url) {
+  try {
+    window.top.location.href = url // iframe ichida bo'lsa — butun oyna
+  } catch {
+    window.location.href = url
+  }
+}
+// Kompyuterda ilova tanlash oynasi (Windows) ochiq turganda ham sahifa "ko'rinadi" —
+// shuning uchun t.me zaxira yo'li faqat telefonlarda ishlaydi.
+const IS_MOBILE = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
+function openChannel() {
+  if (!CHANNEL_USER) return go(TG_CHANNEL)
+  go(`tg://resolve?domain=${CHANNEL_USER}`)
+  if (IS_MOBILE) {
+    setTimeout(() => {
+      if (document.visibilityState === 'visible') go(TG_CHANNEL)
+    }, 1500)
+  }
+}
+// "Telegram kanalga o'tish" tugmasi: telefonda ilovada ochadi,
+// kompyuterda oddiy t.me havolasi (Telegram ilovasi bo'lmasa ham ishlaydi)
+function onTgClick(e) {
+  if (IS_MOBILE) {
+    e.preventDefault()
+    openChannel()
+  }
+}
+
 async function submit() {
   const n = name.value.trim()
   errors.name = n.length < 2
@@ -131,6 +166,7 @@ async function submit() {
     await deliver() // avtomatik yuborilgan bo'lsa, qayta yubormaydi
     doneText.value = `${n}, tez orada ${phone.value} raqamiga qo'ng'iroq qilamiz.`
     sent.value = true
+    setTimeout(openChannel, REDIRECT_DELAY)
   } catch {
     failed.value = true
     alert("Yuborib bo'lmadi. Internetni tekshirib, qayta urinib ko'ring yoki bizga qo'ng'iroq qiling.")
@@ -187,6 +223,8 @@ async function submit() {
       <div class="ok"><svg viewBox="0 0 24 24" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg></div>
       <h2>Arizangiz qabul qilindi!</h2>
       <p>{{ doneText }}</p>
+      <p class="go">Telegram kanalimizga o'tmoqdasiz — <b>"Qo'shilish"</b> tugmasini bosing.</p>
+      <a class="btn tg" :href="TG_CHANNEL" target="_top" rel="noopener" @click="onTgClick">Telegram kanalga o'tish</a>
     </div>
   </section>
 </template>
@@ -271,5 +309,8 @@ async function submit() {
   .field > input { height: 40px }
   .btn { margin-top: 10px; height: 44px }
 }
+.done .go { margin-top: 10px; font-size: 13px; color: var(--ink) }
+.btn.tg { display: grid; place-items: center; text-decoration: none; background: #2aabee; color: #fff; box-shadow: 0 4px 0 #1c8fcb }
+.btn.tg:active { box-shadow: 0 1px 0 #1c8fcb }
 @keyframes pop { from { transform: scale(.4); opacity: 0 } to { transform: scale(1); opacity: 1 } }
 </style>
