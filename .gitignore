@@ -2,5 +2,8 @@ node_modules
 dist
 .env
 
+# Backend kompyuterda arizalarni shu yerda saqlaydi
+backend/data
+
 # Local Netlify folder
 .netlify
